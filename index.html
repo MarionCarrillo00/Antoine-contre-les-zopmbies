@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Antoine contre les zombies</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            background: #222;
+            color: white;
+            overflow: hidden;
+        }
+
+        #game {
+            display: none;
+            position: relative;
+            width: 100vw;
+            height: 100vh;
+            background: url('fond-tgv.jpeg') no-repeat center center / cover;
+
+        }
+
+        #welcome {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 100vw;
+            height: 100vh;
+            background: url('illustration-acceuil.png') no-repeat center center / cover;;
+            color: white;
+            flex-direction: column;
+            text-align: center;
+        }
+
+        #welcome h1 {
+            font-size: 36px;
+            margin-bottom: 20px;
+        }
+
+        #start-button {
+            padding: 15px 30px;
+            font-size: 18px;
+            color: white;
+            background: #007BFF;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+
+        #start-button:hover {
+            background: #0056b3;
+        }
+
+        .antoine {
+            position: absolute;
+            width: 150px;
+            height: 150px;
+            bottom: 0px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: url('antoine-dos.png') no-repeat center center / cover;
+        }
+
+        .zombie {
+            position: absolute;
+            width: 50px;
+            height: 50px;
+            top: 0;
+            background: url('bg/1.PNG') no-repeat center center / cover;
+            transition: opacity 0.5s ease;
+        }
+
+        .zombie2 {
+            position: absolute;
+            width: 50px;
+            height: 50px;
+            top: 0;
+            background: url('bg/2.PNG') no-repeat center center / cover;
+            transition: opacity 0.5s ease;
+        }
+
+        .dvd {
+            position: absolute;
+            width: 50px;
+            height: 50px;
+            background: url('heat.png') no-repeat center center / cover;
+            transition: opacity 0.5s ease;
+        }
+
+        #score {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            font-size: 20px;
+            background: rgba(0, 0, 0, 0.5);
+            padding: 10px;
+            border-radius: 5px;
+        }
+
+        #timer {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            font-size: 20px;
+            background: rgba(0, 0, 0, 0.5);
+            padding: 10px;
+            border-radius: 5px;
+        }
+
+        #game-over {
+            display: none;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 30px;
+            background: rgba(0, 0, 0, 0.8);
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <!-- Welcome screen -->
+    <div id="welcome">
+        <h1>Bienvenue dans "Antoine contre les zombies" !</h1>
+        <p>Aidez Antoine à lancer ses DVD de Heat sur les zombies et atteignez Lille avant qu'ils ne soit trop tard !</p>
+        <button id="start-button">Ready ?</button>
+    </div>
+
+    <!-- Game screen -->
+    <div id="game">
+        <div id="score">Score : 0</div>
+        <div id="timer">Arrivée à Lille dans : 120s</div>
+        <div class="antoine"></div>
+        <div id="game-over">Le train est arrivé à Lille ! Bravo ! Plein de bonnes choses pour cette nouvelles aventure ! Bisous :) Marion</div>
+    </div>
+
+    <script>
+        const welcomeScreen = document.getElementById('welcome');
+        const gameScreen = document.getElementById('game');
+        const startButton = document.getElementById('start-button');
+        const antoine = document.querySelector('.antoine');
+        const scoreDisplay = document.getElementById('score');
+        const timerDisplay = document.getElementById('timer');
+        const gameOverDisplay = document.getElementById('game-over');
+        let score = 0;
+        let gameRunning = false;
+        const gameDuration = 120;
+
+        // Start game
+        startButton.addEventListener('click', () => {
+            welcomeScreen.style.display = 'none';
+            gameScreen.style.display = 'block';
+            gameRunning = true;
+            spawnZombie();
+            startTimer();
+        });
+
+        // Antoine's movement (follow the mouse)
+        document.addEventListener('mousemove', (e) => {
+            if (!gameRunning) return;
+
+            const mouseX = e.clientX;
+            const antoineWidth = antoine.offsetWidth;
+
+            // Restrict Antoine's movement to within the game screen
+            let newLeft = mouseX - antoineWidth / 2;
+            newLeft = Math.max(0, Math.min(window.innerWidth - antoineWidth, newLeft));
+
+            antoine.style.left = `${newLeft}px`;
+        });
+
+        // Throw DVDs on click
+        gameScreen.addEventListener('click', () => {
+            throwDVD();
+        });
+
+function throwDVD() {
+    if (!gameRunning) return;
+
+    const dvd = document.createElement('div');
+    dvd.classList.add('dvd');
+    const antoineRect = antoine.getBoundingClientRect();
+    dvd.style.left = `${antoineRect.left + antoineRect.width / 2 - 15}px`;
+    dvd.style.bottom = '100px';
+    game.appendChild(dvd);
+
+    const interval = setInterval(() => {
+        const rect = dvd.getBoundingClientRect();
+
+        // Déplacement vers le haut
+        if (rect.bottom >= window.innerHeight) {
+            dvd.remove();
+            clearInterval(interval);
+        } else {
+            dvd.style.bottom = `${parseInt(dvd.style.bottom) + 10}px`;
+        }
+
+        // Collision avec les zombies
+        document.querySelectorAll('.zombie').forEach((zombie) => {
+            const zombieRect = zombie.getBoundingClientRect();
+
+
+            // Vérifie si le zombie a déjà été touché
+            if (zombie.dataset.hit) return;
+
+            if (
+                rect.left < zombieRect.right &&
+                rect.right > zombieRect.left &&
+                rect.bottom > zombieRect.top &&
+                rect.top < zombieRect.bottom
+            )
+            {
+                // Marque le zombie comme touché pour éviter plusieurs impacts
+                zombie.dataset.hit = "true";
+
+                // Effet de disparition fluide
+                zombie.style.opacity = '0';
+                dvd.style.opacity = '0';
+
+                setTimeout(() => {
+                    zombie.remove();
+                    dvd.remove();
+                }, 500);
+
+                clearInterval(interval);
+                score += 10;
+                scoreDisplay.textContent = `Score : ${score}`;
+            }
+        });
+    }, 30);
+}
+
+
+        // Spawn zombies
+        function spawnZombie() {
+            if (!gameRunning) return;
+            const zombie = document.createElement('div');
+            zombie.classList.add('zombie');
+            zombie.style.left = `${Math.random() * (window.innerWidth - 50)}px`;
+            game.appendChild(zombie);
+
+            const interval = setInterval(() => {
+                const rect = zombie.getBoundingClientRect();
+                if (rect.top >= window.innerHeight) {
+                    zombie.remove();
+                    clearInterval(interval);
+                } else {
+                    zombie.style.top = `${rect.top + 5}px`;
+                }
+            }, 50);
+
+            setTimeout(spawnZombie, Math.random() * 2000 + 500);
+        }
+
+
+        // Timer
+        let timeLeft = gameDuration;
+        function startTimer() {
+            const timerInterval = setInterval(() => {
+                timeLeft--;
+                timerDisplay.textContent = `Temps restant : ${timeLeft}s`;
+                if (timeLeft <= 0) {
+                    clearInterval(timerInterval);
+                    endGame();
+                }
+            }, 1000);
+        }
+
+        function endGame() {
+            gameRunning = false;
+            gameOverDisplay.style.display = 'block';
+        }
+    </script>
+</body>
+</html>
