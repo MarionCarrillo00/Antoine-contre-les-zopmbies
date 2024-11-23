@@ -61,11 +61,10 @@
 
         .antoine {
             position: absolute;
-            width: 150px;
-            height: 150px;
+            width: 250px;
+            height: 250px;
             bottom: 0px;
             left: 50%;
-            transform: translateX(-50%);
             background: url('antoine-dos.png') no-repeat center center / cover;
         }
 
@@ -74,8 +73,18 @@
             width: 50px;
             height: 50px;
             top: 0;
+        }
+
+        .zombie1 {
+            position: absolute;
+            width: 50px;
+            height: 50px;
+            top: 0;
             background: url('bg/1.PNG') no-repeat center center / cover;
             transition: opacity 0.5s ease;
+            padding-left: 10%;
+            padding-right: 10%;
+
         }
 
         .zombie2 {
@@ -85,7 +94,42 @@
             top: 0;
             background: url('bg/2.PNG') no-repeat center center / cover;
             transition: opacity 0.5s ease;
+            padding-left: 10%;
+            padding-right: 10%;
         }
+
+        .zombie3 {
+            position: absolute;
+            width: 50px;
+            height: 50px;
+            top: 0;
+            background: url('bg/3.PNG') no-repeat center center / cover;
+            transition: opacity 0.5s ease;
+            padding-left: 10%;
+            padding-right: 10%;
+        }
+        .zombie4 {
+            position: absolute;
+            width: 50px;
+            height: 50px;
+            top: 0;
+            background: url('bg/4.PNG') no-repeat center center / cover;
+            transition: opacity 0.5s ease;
+            padding-left: 10%;
+            padding-right: 10%;
+        }
+
+        .zombie5 {
+            position: absolute;
+            width: 50px;
+            height: 50px;
+            top: 0;
+            background: url('bg/4.PNG') no-repeat center center / cover;
+            transition: opacity 0.5s ease;
+            padding-left: 10%;
+            padding-right: 10%;
+        }
+
 
         .dvd {
             position: absolute;
@@ -142,7 +186,7 @@
         <div id="score">Score : 0</div>
         <div id="timer">Arrivée à Lille dans : 120s</div>
         <div class="antoine"></div>
-        <div id="game-over">Le train est arrivé à Lille ! Bravo ! Plein de bonnes choses pour cette nouvelles aventure ! Bisous :) Marion</div>
+        <div id="game-over">Le train est arrivé à Lille ! Bravo ! Plein de bonnes choses pour cette nouvelle aventure ! Bisous :) Marion</div>
     </div>
 
     <script>
@@ -173,7 +217,7 @@
             const mouseX = e.clientX;
             const antoineWidth = antoine.offsetWidth;
 
-            // Restrict Antoine's movement to within the game screen
+            //Restrict Antoine's movement to within the game screen
             let newLeft = mouseX - antoineWidth / 2;
             newLeft = Math.max(0, Math.min(window.innerWidth - antoineWidth, newLeft));
 
@@ -245,8 +289,12 @@ function throwDVD() {
         // Spawn zombies
         function spawnZombie() {
             if (!gameRunning) return;
+            const minNumber = 1; // le minimum
+            const maxNumber = 4; // le maximum
+            const randomnumber = Math.floor(Math.random() * (maxNumber + 1) + minNumber); 
             const zombie = document.createElement('div');
             zombie.classList.add('zombie');
+            zombie.classList.add('zombie'+ randomnumber);
             zombie.style.left = `${Math.random() * (window.innerWidth - 50)}px`;
             game.appendChild(zombie);
 
