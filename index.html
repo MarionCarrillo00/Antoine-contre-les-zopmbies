@@ -37,6 +37,7 @@
             color: white;
             flex-direction: column;
             text-align: center;
+            padding: 20px;
         }
 
         #welcome h1 {
@@ -130,6 +131,18 @@
             padding-right: 10%;
         }
 
+        .bad-zombie {
+            position: absolute;
+            width: 50px;
+            height: 50px;
+            top: 0;
+            background: url('bg/5.PNG') no-repeat center center / cover;
+            transition: opacity 0.5s ease;
+            padding-left: 10%;
+            padding-right: 10%;
+            /**border: 2px solid lightgreen;**/
+        }
+
 
         .dvd {
             position: absolute;
@@ -170,23 +183,109 @@
             padding: 20px;
             border-radius: 10px;
             text-align: center;
+            background: url('antoine-win.png') no-repeat center center / cover;
+            color: white;
+            text-shadow: 0 0 10px rgba(0, 0, 0, 0.8);
+            height: 100%;
+            width: 100%;
         }
+
+        #victory {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+        }
+
+        #victory img {
+            max-width: 80%;
+            border-radius: 10px;
+            box-shadow: 0 0 20px rgba(0, 255, 0, 0.7);
+        }
+
+        #phrase-display {
+            position: absolute;
+            top: 100px;
+            width: 100%;
+            text-align: center;
+            font-size: 20px;
+            font-weight: bold;
+            color: white;
+            text-shadow: 0 0 10px rgba(0, 0, 0, 0.8);
+            opacity: 0;
+            transition: opacity 0.5s;
+        }
+
+        #scoreboard {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+            background: rgba(0, 0, 0, 0.8);
+            color: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 20px rgba(255, 255, 255, 0.8);
+        }
+
+        #scoreboard h2 {
+            margin-bottom: 10px;
+        }
+
+        #scoreboard ol {
+            padding: 0;
+            list-style-type: none;
+            text-align: left;
+        }
+
+        #restart-btn {
+            margin-top: 15px;
+            padding: 10px 20px;
+            font-size: 16px;
+            background-color: white;
+            color: black;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        #restart-btn:hover {
+            background-color: #ddd;
+        }
+
+
+
     </style>
 </head>
 <body>
     <!-- Welcome screen -->
     <div id="welcome">
         <h1>Bienvenue dans "Antoine contre les zombies" !</h1>
-        <p>Aidez Antoine à lancer ses DVD de Heat sur les zombies et atteignez Lille avant qu'ils ne soit trop tard !</p>
-        <button id="start-button">Ready ?</button>
+        <p>Aidez Antoine à lancer ses DVD de Heat sur les zombies et atteignez Lille avant qu'ils ne soit trop tard !<br/>
+        Robert Dieu Niro est venu pour t'aider. Attention à ne pas lui tirer dessus ! </p>
+        <br/>
+        <button id="start-button">Go ?</button>
     </div>
 
     <!-- Game screen -->
     <div id="game">
         <div id="score">Score : 0</div>
-        <div id="timer">Arrivée à Lille dans : 120s</div>
+        <div id="timer">Gare de Lille dans : 60s</div>
+        <div id="phrase-display"></div>
         <div class="antoine"></div>
-        <div id="game-over">Le train est arrivé à Lille ! Bravo ! Plein de bonnes choses pour cette nouvelle aventure ! Bisous :) Marion</div>
+        <div id="game-over"><br/><br/><br/><br/><br/>Le train est arrivé à Lille ! Bravo ! Plein de bonnes choses pour cette nouvelle aventure ! Bisous :) Marion</div>
+    </div>
+
+    <!--<div id="victory" style="display: none;">
+        <img src="illustration-acceuil.png" alt="Victoire">
+    </div>-->
+
+    <div id="scoreboard" style="display: none;">
+        <h2>Tableau des scores</h2>
+        <ol id="score-list"></ol>
+        <button id="restart-btn">Rejouer</button>
     </div>
 
     <script>
@@ -199,7 +298,22 @@
         const gameOverDisplay = document.getElementById('game-over');
         let score = 0;
         let gameRunning = false;
-        const gameDuration = 120;
+        const gameDuration = 60;
+        const goodZombiePhrases = [
+            "Bien joué, Antoine !",
+            "Touché ! Plus qu'un autre.",
+            "Ces zombies n'ont aucune chance !",
+            "DVD fatal !",
+            "Tu es le héros du train !"
+        ];
+
+        const badZombiePhrases = [
+            "Oups, ce n'était pas le bon zombie !",
+            "Oh non, ça fait mal !",
+            "Attention : cible ratée !",
+            "Mauvaise idée !",
+            "Les points s'envolent !"
+        ];
 
         // Start game
         startButton.addEventListener('click', () => {
@@ -214,20 +328,30 @@
         document.addEventListener('mousemove', (e) => {
             if (!gameRunning) return;
 
-            const mouseX = e.clientX;
-            const antoineWidth = antoine.offsetWidth;
+            const gameRect = game.getBoundingClientRect();
+            const offsetX = 20; // Autorise Antoine à sortir légèrement des bords
 
-            //Restrict Antoine's movement to within the game screen
-            let newLeft = mouseX - antoineWidth / 2;
-            newLeft = Math.max(0, Math.min(window.innerWidth - antoineWidth, newLeft));
+            let posX = e.clientX - gameRect.left;
+            posX = Math.max(-offsetX, Math.min(posX, gameRect.width + offsetX)); // Dépassement limité
 
-            antoine.style.left = `${newLeft}px`;
+            antoine.style.left = `${posX - antoine.offsetWidth / 2}px`;
         });
 
         // Throw DVDs on click
         gameScreen.addEventListener('click', () => {
             throwDVD();
         });
+
+        function showRandomPhrase(phrases) {
+            const phraseDisplay = document.getElementById('phrase-display');
+            const randomPhrase = phrases[Math.floor(Math.random() * phrases.length)];
+            phraseDisplay.textContent = randomPhrase;
+
+            phraseDisplay.style.opacity = '1';
+            setTimeout(() => {
+                phraseDisplay.style.opacity = '0';
+            }, 2000); // La phrase disparaît après 2 secondes
+        }
 
 function throwDVD() {
     if (!gameRunning) return;
@@ -268,8 +392,20 @@ function throwDVD() {
                 // Marque le zombie comme touché pour éviter plusieurs impacts
                 zombie.dataset.hit = "true";
 
-                // Effet de disparition fluide
-                zombie.style.opacity = '0';
+                if (zombie.classList.contains('bad-zombie')) {
+                    // Zombie spécial : perte de points
+                    zombie.style.opacity = '0';
+                    score = Math.max(0, score - 10); // Pas de score négatif
+                    scoreDisplay.textContent = `Score : ${score}`;
+                    showRandomPhrase(badZombiePhrases);
+                } else {
+                    // Zombie normal : gain de points
+                    zombie.style.opacity = '0';
+                    score += 10;
+                    scoreDisplay.textContent = `Score : ${score}`;
+                    showRandomPhrase(goodZombiePhrases);
+                }
+
                 dvd.style.opacity = '0';
 
                 setTimeout(() => {
@@ -278,8 +414,6 @@ function throwDVD() {
                 }, 500);
 
                 clearInterval(interval);
-                score += 10;
-                scoreDisplay.textContent = `Score : ${score}`;
             }
         });
     }, 30);
@@ -293,8 +427,15 @@ function throwDVD() {
             const maxNumber = 4; // le maximum
             const randomnumber = Math.floor(Math.random() * (maxNumber + 1) + minNumber); 
             const zombie = document.createElement('div');
-            zombie.classList.add('zombie');
-            zombie.classList.add('zombie'+ randomnumber);
+
+
+             if (Math.random() < 0.2) {
+                    zombie.classList.add('zombie', 'bad-zombie');
+            } else {
+                    zombie.classList.add('zombie', 'zombie'+ randomnumber);
+            }
+
+
             zombie.style.left = `${Math.random() * (window.innerWidth - 50)}px`;
             game.appendChild(zombie);
 
@@ -317,7 +458,7 @@ function throwDVD() {
         function startTimer() {
             const timerInterval = setInterval(() => {
                 timeLeft--;
-                timerDisplay.textContent = `Temps restant : ${timeLeft}s`;
+                timerDisplay.textContent = `Gare de Lille dans : ${timeLeft}s`;
                 if (timeLeft <= 0) {
                     clearInterval(timerInterval);
                     endGame();
@@ -325,10 +466,61 @@ function throwDVD() {
             }, 1000);
         }
 
+        function saveScore(name, score) {
+            const scores = JSON.parse(localStorage.getItem('scores')) || [];
+            scores.push({ name, score });
+            scores.sort((a, b) => b.score - a.score); // Trier par score décroissant
+            localStorage.setItem('scores', JSON.stringify(scores.slice(0, 10))); // Garder les 10 meilleurs scores
+        }
+
+        function getScores() {
+            return JSON.parse(localStorage.getItem('scores')) || [];
+        }
+
+        function displayScoreboard() {
+            const scores = getScores();
+            const scoreList = document.getElementById('score-list');
+            scoreList.innerHTML = ''; // Vider la liste avant de la remplir
+
+            scores.forEach((entry, index) => {
+                const li = document.createElement('li');
+                li.textContent = `${index + 1}. ${entry.name} - ${entry.score} points`;
+                scoreList.appendChild(li);
+            });
+
+            document.getElementById('scoreboard').style.display = 'block';
+        }
+
         function endGame() {
             gameRunning = false;
+
+            const playerName = prompt("Entrez votre nom :") || "Joueur inconnu";
+            saveScore(playerName, score);
+
+            // Afficher l'image de victoire
             gameOverDisplay.style.display = 'block';
+            setTimeout(() => {
+                gameOverDisplay.style.display = 'none';
+                displayScoreboard();
+
+            }, 10000);
         }
+
+
+                document.getElementById('restart-btn').addEventListener('click', () => {
+                    document.getElementById('scoreboard').style.display = 'none';
+                    document.querySelectorAll('.zombie, .dvd').forEach((elem) => elem.remove());
+                    timeLeft = 60;
+                    score = 0;
+                    scoreDisplay.textContent = `Score : ${score}`;
+                    gameRunning = true;
+                    spawnZombie();
+                    startTimer();
+
+                });
+
+
+
     </script>
 </body>
 </html>
